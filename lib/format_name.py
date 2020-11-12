@@ -7,8 +7,7 @@ reg_replace_char = re.compile(r'[\-`\'"\\]')
 reg_space = re.compile(r'\s+')
 reg_add_space_for_char = re.compile(r'([&])')
 reg_name_suffix = re.compile(
-    r'\s+(LLC|LTD|INC|CO|CORP|CORPORATIONS?|Incorporated|PLLC|COMPANY|COMPANIES|PTY|ENTERPRISES?|MANUFACTURING|LIMITED|MFG|INDUSTRIES|MACHINING|LP)\s*$',
-    re.IGNORECASE)
+    r'\s+(LLC|LTD|INC|CO|CL|LP|CORP|CORPORATION|C|SL|Corporation|Incorporated|PLLC|HLDG|HOLDINGS|HOLDING|HLDGs|HO|H|PLC|COMPANY|PTY|Global|GL|Canada|ENTERPRISES?|MANUFACTURING|LIMITED|MFG|INDUSTRIES|MACHINING|GROUP|GRP|USA|North America|G|GP)$', re.IGNORECASE)
 reg_spots = re.compile(r'\.+')
 reg_domain = re.compile(r'([^.]+)\.[^.]+$')
 reg_not_en = re.compile(r'[^a-zA-Z0-9]', re.IGNORECASE)
