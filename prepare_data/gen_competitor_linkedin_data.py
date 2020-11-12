@@ -17,6 +17,7 @@ for i, v in enumerate(competitor_columns):
 # initialize variables
 d_gvkey_2_name = {}
 d_name_2_gvkey = {}
+d_gvkey_pair = {}
 
 print('\nadding gvkey and company name to dictionary ... ')
 for gvkey_1, name_1, gvkey_2, name_2 in competitor_data.iloc:
@@ -37,8 +38,12 @@ for gvkey_1, name_1, gvkey_2, name_2 in competitor_data.iloc:
     d_name_2_gvkey[_formatted_name_1] = gvkey_1
     d_name_2_gvkey[_formatted_name_2] = gvkey_2
 
+    gvkey_pair = f'{min(gvkey_1, gvkey_2)}_{max(gvkey_1, gvkey_2)}'
+    d_gvkey_pair[gvkey_pair] = True
+
 print(f'len of d_gvkey_2_name: {len(d_gvkey_2_name)}')
 print(f'len of d_name_2_gvkey: {len(d_name_2_gvkey)}')
+print(f'len of d_gvkey_pair: {len(d_gvkey_pair)}')
 
 d_gvkey_2_domain = {}
 
@@ -80,6 +85,7 @@ with open(linkedin_path, 'rb') as f:
 
 d_domain_2_linkedin_val = {}
 d_name_2_linkedin_val = {}
+d_linkedin_name_2_linkedin_val = {}
 
 print('formatting linkedin data ... ')
 for _, linkedin_val in d_linkedin_url_2_linkedin_val.items():
@@ -97,6 +103,7 @@ for _, linkedin_val in d_linkedin_url_2_linkedin_val.items():
 
     d_domain_2_linkedin_val[website] = linkedin_val
     d_name_2_linkedin_val[_formatted_name] = linkedin_val
+    d_linkedin_name_2_linkedin_val[main_val['name']] = linkedin_val
 
 print(f'len of d_domain_2_linkedin_val: {len(d_domain_2_linkedin_val)}')
 print(f'len of d_name_2_linkedin_val: {len(d_name_2_linkedin_val)}')
@@ -119,7 +126,7 @@ for name, domain, gvkey in names_domains:
         d_gvkey_2_linkedin_val[gvkey] = d_name_2_linkedin_val[name]
 
     else:
-        domains_to_be_searched.append(domain)
+        domains_to_be_searched.append([domain, name])
 
 for name, gvkey in names_no_domain:
     if name not in d_name_2_linkedin_val:
@@ -135,6 +142,8 @@ competitors = []
 names_to_be_search = []
 d_min_gvkey_max_gvkey = {}
 d_gvkey = {}
+
+d_min_linkedin_name_max_linkedin_name = {}
 
 print('\nExtracting competitor linkedin data ... ')
 for gvkey_1, name_1, gvkey_2, name_2 in competitor_data.iloc:
@@ -163,6 +172,12 @@ for gvkey_1, name_1, gvkey_2, name_2 in competitor_data.iloc:
             d_gvkey_2_linkedin_val[gvkey_2],
         ])
 
+        name_1 = d_gvkey_2_linkedin_val[gvkey_1]['main']['name']
+        name_2 = d_gvkey_2_linkedin_val[gvkey_2]['main']['name']
+
+        key = f'{min(name_1, name_2)}____{max(name_1, name_2)}'
+        d_min_linkedin_name_max_linkedin_name[key] = True
+
 print(f'\ncount of competitor relationships: {len(competitors)}')
 print(f'count of distinct competitor companies: {len(d_gvkey)}')
 
@@ -171,9 +186,41 @@ print('\nsaving data ...')
 with open(os.path.join(path.DATA_DIR, 'runtime', 'competitor_linkedin.json'), 'wb') as f:
     f.write(json.dumps(competitors).encode('utf-8'))
 
-to_be_search = list(set(names_to_be_search)) + domains_to_be_searched
+with open(os.path.join(path.DATA_DIR, 'runtime', 'competitor_linkedin_dict_format_v3.json'), 'wb') as f:
+    f.write(json.dumps({
+        'd_linkedin_name_2_linkedin_val': d_linkedin_name_2_linkedin_val,
+        'd_min_linkedin_name_max_linkedin_name': d_min_linkedin_name_max_linkedin_name,
+    }).encode('utf-8'))
 
-df = pd.DataFrame({'search_text': to_be_search})
+search_texts = list(set(names_to_be_search)) + list(map(lambda x: x[0], domains_to_be_searched))
+confirm_names = list(set(names_to_be_search)) + list(map(lambda x: x[1], domains_to_be_searched))
+
+df = pd.DataFrame({'search_text': search_texts, 'company_name': confirm_names})
 df.to_csv(os.path.join(path.DATA_DIR, 'runtime', 'to_be_search.csv'), index=False)
 
 print('\ndone')
+
+# output:
+# adding gvkey and company name to dictionary ...
+# len of d_gvkey_2_name: 3358
+# len of d_name_2_gvkey: 5230
+#
+# loading public firms mapped gvkey ...
+# len of d_gvkey_2_domain: 11181
+#
+# count of gvkeys that can be mapped in the public firms file: 2838
+# count of gvkeys that cannot be mapped in the public firms file: 520
+#
+# loading linkedin data ...
+# formatting linkedin data ...
+# len of d_domain_2_linkedin_val: 6752
+# len of d_name_2_linkedin_val: 6801
+#
+# calculating statistic for inter sec between linkedin and competitor data ...
+# count_match_domain: 1461
+# count_match_domain_name: 1799
+#
+# Extracting competitor linkedin data ...
+#
+# count of competitor relationships: 9662
+# count of distinct competitor companies: 1725
