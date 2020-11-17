@@ -1,7 +1,7 @@
 import os
 import json
 import numpy as np
-import random
+from config.path import VERSION
 from lib import path_lib
 from nltk.tokenize import sent_tokenize
 
@@ -13,13 +13,13 @@ class Loader:
     """
 
     def __init__(self, use_cache=True):
-        self.__competitor_path = path_lib.get_relative_file_path('runtime', 'competitor_linkedin_dict_format_v3.json')
+        self.__competitor_path = path_lib.get_relative_file_path('runtime', f'competitor_linkedin_dict_format_{VERSION}.json')
         self.__data = self.__load(use_cache)
 
     def __load(self, use_cache):
         """ Load the data as embeddings """
 
-        cache_path = path_lib.get_relative_file_path('runtime', 'input_cache', f'company_embeddings.pkl')
+        cache_path = path_lib.get_relative_file_path('runtime', 'input_cache', f'company_embeddings_{VERSION}.pkl')
         if use_cache and os.path.isfile(cache_path):
             return path_lib.read_cache(cache_path)
 
@@ -56,3 +56,8 @@ class Loader:
         """ get complete dataset """
         X, names = list(zip(*self.__data))
         return np.array(X), np.array(names)
+
+
+# o_loader = Loader(use_cache=False)
+# X, names = o_loader.all()
+# print(f'X.shape: {X.shape}')

@@ -1,7 +1,7 @@
 from lib import path_lib
 
 # load the json data
-json_path = path_lib.get_relative_file_path('runtime', 'competitor_linkedin_dict_format_v3.json')
+json_path = path_lib.get_relative_file_path('runtime', 'competitor_linkedin_dict_format_v4.json')
 tmp = path_lib.load_json(json_path)
 d_linkedin_name_2_linkedin_val = tmp['d_linkedin_name_2_linkedin_val']
 d_min_linkedin_name_max_linkedin_name = tmp['d_min_linkedin_name_max_linkedin_name']
@@ -33,4 +33,4 @@ for min_name_max_name in name_pairs:
 
 print(f'count of public companies: {pub_num}')
 
-# count of public companies: 1981
+# count of public companies: 2142

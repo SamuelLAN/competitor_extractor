@@ -8,7 +8,7 @@ sys.path.append(root_dir)
 import time
 import json
 import tensorflow as tf
-from load.fixed_mean_sent_emb_loader_v4 import Loader
+from load.fixed_mean_sent_emb_loader_v2 import Loader
 from models.fc import Model
 from lib import logs
 
@@ -35,12 +35,12 @@ class Train:
 
     def __init__(self):
         train_loader = Loader(self.M.data_params['neg_rate_train'],
-                              0, self.M.data_params['train_ratio'], use_cache=True)
+                              0, self.M.data_params['train_ratio'], use_cache=False)
         val_loader = Loader(self.M.data_params['neg_rate_val'],
                             self.M.data_params['train_ratio'],
-                            self.M.data_params['train_ratio'] + self.M.data_params['val_ratio'], use_cache=True)
+                            self.M.data_params['train_ratio'] + self.M.data_params['val_ratio'], use_cache=False)
         test_loader = Loader(self.M.data_params['neg_rate_test'],
-                             self.M.data_params['train_ratio'] + self.M.data_params['val_ratio'], 1.0, use_cache=True)
+                             self.M.data_params['train_ratio'] + self.M.data_params['val_ratio'], 1.0, use_cache=False)
 
         self.__train_X1, self.__train_X2, self.__train_Y, self.__train_names_1, self.__train_names_2 = train_loader.all()
         self.__val_X1, self.__val_X2, self.__val_Y, self.__val_names_1, self.__val_names_2 = val_loader.all()

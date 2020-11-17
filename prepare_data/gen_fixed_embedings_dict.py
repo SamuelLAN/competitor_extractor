@@ -1,9 +1,10 @@
 import numpy as np
 from scipy.spatial.distance import cdist
 from lib import path_lib
+from config.path import VERSION
 
 # load embeddings
-pkl_path = path_lib.get_relative_file_path('runtime', 'input_cache', f'company_embeddings.pkl')
+pkl_path = path_lib.get_relative_file_path('runtime', 'input_cache', f'company_embeddings_{VERSION}.pkl')
 company_embeddings = path_lib.read_cache(pkl_path)
 X, names = list(zip(*company_embeddings))
 X = np.array(X)
@@ -15,11 +16,11 @@ for i, embedding in enumerate(X):
     d_linkedin_name_2_embeddings[names[i]] = embedding
 
 # save results
-path_lib.cache(path_lib.get_relative_file_path('runtime', 'processed_input', 'd_linkedin_name_2_embeddings.pkl'),
+path_lib.cache(path_lib.get_relative_file_path('runtime', 'processed_input', f'd_linkedin_name_2_embeddings_{VERSION}.pkl'),
                d_linkedin_name_2_embeddings)
 
 # load the data
-json_path = path_lib.get_relative_file_path('runtime', 'competitor_linkedin_dict_format_v3.json')
+json_path = path_lib.get_relative_file_path('runtime', f'competitor_linkedin_dict_format_{VERSION}.json')
 tmp = path_lib.load_json(json_path)
 d_linkedin_name_2_linkedin_val = tmp['d_linkedin_name_2_linkedin_val']
 d_min_linkedin_name_max_linkedin_name = tmp['d_min_linkedin_name_max_linkedin_name']
@@ -44,7 +45,7 @@ for i, name in enumerate(names):
 
 # save results
 path_lib.write_json(
-    path_lib.get_relative_file_path('runtime', 'processed_input', 'd_linkedin_name_2_similar_names.json'),
+    path_lib.get_relative_file_path('runtime', 'processed_input', f'd_linkedin_name_2_similar_names_{VERSION}.json'),
     d_linkedin_name_2_similar_names)
 
 print('done')

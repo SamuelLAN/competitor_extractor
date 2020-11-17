@@ -58,12 +58,12 @@ class Model:
         # create model path
         self.model_dir = path_lib.create_dir_in_root('runtime', 'models', self.name)
 
-    def train(self, X, names):
+    def train(self, X, names, use_cache=True):
         result_path = os.path.join(
             self.model_dir,
             f'd_name_2_similar_names_top_{self.model_params["top_k"]}_threshold_{self.model_params["threshold"]}.json')
 
-        if os.path.exists(result_path):
+        if use_cache and os.path.exists(result_path):
             self.d_name_2_similar_names = path_lib.read_cache(result_path)
             return
 

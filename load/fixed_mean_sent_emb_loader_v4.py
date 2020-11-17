@@ -2,6 +2,7 @@ import os
 import numpy as np
 import random
 from lib import path_lib
+from config.path import VERSION
 
 
 class Loader:
@@ -17,11 +18,11 @@ class Loader:
     """
 
     def __init__(self, negative_rate=1, start_ratio=0.0, end_ratio=0.81, use_cache=True):
-        self.__competitor_path = path_lib.get_relative_file_path('runtime', 'competitor_linkedin_dict_format_v3.json')
+        self.__competitor_path = path_lib.get_relative_file_path('runtime', f'competitor_linkedin_dict_format_{VERSION}.json')
         self.__embedding_path = path_lib.get_relative_file_path(
-            'runtime', 'processed_input', 'd_linkedin_name_2_embeddings.pkl')
+            'runtime', 'processed_input', f'd_linkedin_name_2_embeddings_{VERSION}.pkl')
         self.__similar_company_path = path_lib.get_relative_file_path(
-            'runtime', 'processed_input', 'd_linkedin_name_2_similar_names.json')
+            'runtime', 'processed_input', f'd_linkedin_name_2_similar_names_{VERSION}.json')
 
         self.__negative_rate = negative_rate
         self.__start_ratio = start_ratio
@@ -70,18 +71,30 @@ class Loader:
             data.append([feature_1, feature_2, 1, name_1, name_2])
 
             # add negative competitor relationship
-            for i in range(int(self.__negative_rate * 2)):
-                if random.randint(0, 1) == 0:
-                    # randomly choose negative competitor relationship
-                    name_2_neg = self.__random_choose(name_1)
-                    feature_2_neg = self.__choose_features(name_2_neg, d_linkedin_name_2_linkedin_val[name_2_neg])
-                    data.append([feature_1, feature_2_neg, 0, name_1, name_2_neg])
+            for i in range(int(self.__negative_rate)):
+                # randomly choose negative competitor relationship
+                name_2_neg = self.__random_choose(name_1)
+                feature_2_neg = self.__choose_features(name_2_neg, d_linkedin_name_2_linkedin_val[name_2_neg])
+                data.append([feature_1, feature_2_neg, 0, name_1, name_2_neg])
 
-                else:
-                    # randomly choose negative competitor relationship
-                    name_1_neg = self.__random_choose(name_2)
-                    feature_1_neg = self.__choose_features(name_1_neg, d_linkedin_name_2_linkedin_val[name_1_neg])
-                    data.append([feature_1_neg, feature_2, 0, name_1_neg, name_2])
+                # randomly choose negative competitor relationship
+                name_1_neg = self.__random_choose(name_2)
+                feature_1_neg = self.__choose_features(name_1_neg, d_linkedin_name_2_linkedin_val[name_1_neg])
+                data.append([feature_1_neg, feature_2, 0, name_1_neg, name_2])
+
+            # # add negative competitor relationship
+            # for i in range(int(self.__negative_rate * 2)):
+            #     if random.randint(0, 1) == 0:
+            #         # randomly choose negative competitor relationship
+            #         name_2_neg = self.__random_choose(name_1)
+            #         feature_2_neg = self.__choose_features(name_2_neg, d_linkedin_name_2_linkedin_val[name_2_neg])
+            #         data.append([feature_1, feature_2_neg, 0, name_1, name_2_neg])
+            #
+            #     else:
+            #         # randomly choose negative competitor relationship
+            #         name_1_neg = self.__random_choose(name_2)
+            #         feature_1_neg = self.__choose_features(name_1_neg, d_linkedin_name_2_linkedin_val[name_1_neg])
+            #         data.append([feature_1_neg, feature_2, 0, name_1_neg, name_2])
 
         print('shuffling the data ...')
         random.shuffle(data)

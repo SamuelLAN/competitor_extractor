@@ -55,15 +55,15 @@ plt.close()
 print('\ndone')
 
 """
-count of all company pairs: 30112680
-mean similarity for all company pairs: 0.47679189131293215
-std similarity for all company pairs: 0.11996763414226905
+count of all company pairs: 45167760
+mean similarity for all company pairs: 0.4694795092543445
+std similarity for all company pairs: 0.1169462500073105
 max similarity for all company pairs: 1.0
 min similarity for all company pairs: 0.15235062352614026
 
-count of competitor relationship: 15731
-mean similarity for competitors: 0.5935613760053964
-std similarity for competitors: 0.11671970039768058
+count of competitor relationship: 20326
+mean similarity for competitors: 0.5759494816108272
+std similarity for competitors: 0.12464365426374166
 max similarity for competitors: 0.9044875194205836
 min similarity for competitors: 0.20937702813234335
 """

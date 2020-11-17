@@ -3,7 +3,7 @@ import json
 import numpy as np
 import random
 from lib import path_lib
-from nltk.tokenize import sent_tokenize
+from config.path import VERSION
 
 
 class Loader:
@@ -18,7 +18,9 @@ class Loader:
     """
 
     def __init__(self, negative_rate=1, start_ratio=0.0, end_ratio=0.81, use_cache=True):
-        self.__competitor_path = path_lib.get_relative_file_path('runtime', 'competitor_linkedin_dict_format_v3.json')
+        self.__competitor_path = path_lib.get_relative_file_path('runtime', f'competitor_linkedin_dict_format_{VERSION}.json')
+        self.__embedding_path = path_lib.get_relative_file_path(
+            'runtime', 'processed_input', f'd_linkedin_name_2_embeddings_{VERSION}.pkl')
         self.__negative_rate = negative_rate
         self.__start_ratio = start_ratio
         self.__end_ratio = end_ratio
@@ -41,6 +43,8 @@ class Loader:
         d_linkedin_name_2_linkedin_val = tmp['d_linkedin_name_2_linkedin_val']
         d_min_linkedin_name_max_linkedin_name = tmp['d_min_linkedin_name_max_linkedin_name']
 
+        self.__d_linkedin_name_2_embedding = path_lib.load_pkl(self.__embedding_path)
+
         print('splitting dataset ...')
         name_pairs = list(d_min_linkedin_name_max_linkedin_name.keys())
         name_pairs.sort()
@@ -56,16 +60,14 @@ class Loader:
 
         data = []
 
-        print('loading sentence bert to generate embeddings ...')
-        from sentence_transformers import SentenceTransformer
-        self.__sentence_bert = SentenceTransformer('bert-large-nli-stsb-mean-tokens')
+        print('generating the positive and negative competitor relationships ... ')
 
         for min_name_max_name in name_pairs:
             name_1, name_2 = min_name_max_name.split('____')
 
             # get features
-            feature_1 = self.__choose_features(d_linkedin_name_2_linkedin_val[name_1])
-            feature_2 = self.__choose_features(d_linkedin_name_2_linkedin_val[name_2])
+            feature_1 = self.__choose_features(name_1, d_linkedin_name_2_linkedin_val[name_1])
+            feature_2 = self.__choose_features(name_2, d_linkedin_name_2_linkedin_val[name_2])
 
             # add positive competitor relationship
             data.append([feature_1, feature_2, 1, name_1, name_2])
@@ -75,13 +77,13 @@ class Loader:
                 if random.randint(0, 1) == 0:
                     # randomly choose negative competitor relationship
                     name_2_neg = self.__random_choose(names, name_1, d_min_linkedin_name_max_linkedin_name)
-                    feature_2_neg = self.__choose_features(d_linkedin_name_2_linkedin_val[name_2_neg])
+                    feature_2_neg = self.__choose_features(name_2_neg, d_linkedin_name_2_linkedin_val[name_2_neg])
                     data.append([feature_1, feature_2_neg, 0, name_1, name_2_neg])
 
                 else:
                     # randomly choose negative competitor relationship
                     name_1_neg = self.__random_choose(names, name_2, d_min_linkedin_name_max_linkedin_name)
-                    feature_1_neg = self.__choose_features(d_linkedin_name_2_linkedin_val[name_1_neg])
+                    feature_1_neg = self.__choose_features(name_1_neg, d_linkedin_name_2_linkedin_val[name_1_neg])
                     data.append([feature_1_neg, feature_2, 0, name_1_neg, name_2])
 
         print('shuffling the data ...')
@@ -93,11 +95,9 @@ class Loader:
         print('finish loading ')
         return data
 
-    def __choose_features(self, linkedin_val):
+    def __choose_features(self, name, linkedin_val):
         """ Define which features are used for the prediction """
-        description = linkedin_val['main']['description']
-        sentences = sent_tokenize(description)
-        return np.mean(self.__sentence_bert.encode(sentences), axis=0)
+        return self.__d_linkedin_name_2_embedding[name]
 
     @staticmethod
     def __random_choose(names, name_1, d_names):

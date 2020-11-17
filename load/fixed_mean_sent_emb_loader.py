@@ -3,6 +3,7 @@ import json
 import numpy as np
 import random
 from lib import path_lib
+from config.path import VERSION
 from nltk.tokenize import sent_tokenize
 
 
@@ -13,7 +14,7 @@ class Loader:
     """
 
     def __init__(self, negative_rate=1, use_cache=True):
-        self.__competitor_path = path_lib.get_relative_file_path('runtime', 'competitor_linkedin_dict_format_v3.json')
+        self.__competitor_path = path_lib.get_relative_file_path('runtime', f'competitor_linkedin_dict_format_{VERSION}.json')
         self.__negative_rate = negative_rate
 
         self.__data = self.__load(use_cache)

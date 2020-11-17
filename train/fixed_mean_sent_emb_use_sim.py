@@ -8,7 +8,7 @@ sys.path.append(root_dir)
 import time
 import json
 from load.fixed_mean_sent_emb_for_a_company_loader import Loader as CLoader
-from load.fixed_mean_sent_emb_loader_v4 import Loader
+from load.fixed_mean_sent_emb_loader_v2 import Loader
 from models.sim import Model
 from lib import logs
 
@@ -20,14 +20,14 @@ class Train:
     M = Model
 
     def __init__(self):
-        company_loader = CLoader()
+        company_loader = CLoader(use_cache=True)
         train_loader = Loader(self.M.data_params['neg_rate_train'],
-                              0, self.M.data_params['train_ratio'], use_cache=True)
+                              0, self.M.data_params['train_ratio'], use_cache=False)
         val_loader = Loader(self.M.data_params['neg_rate_val'],
                             self.M.data_params['train_ratio'],
-                            self.M.data_params['train_ratio'] + self.M.data_params['val_ratio'], use_cache=True)
+                            self.M.data_params['train_ratio'] + self.M.data_params['val_ratio'], use_cache=False)
         test_loader = Loader(self.M.data_params['neg_rate_test'],
-                             self.M.data_params['train_ratio'] + self.M.data_params['val_ratio'], 1.0, use_cache=True)
+                             self.M.data_params['train_ratio'] + self.M.data_params['val_ratio'], 1.0, use_cache=False)
 
         self.__X, self.__names = company_loader.all()
         self.__train_X1, self.__train_X2, self.__train_Y, self.__train_names_1, self.__train_names_2 = train_loader.all()
@@ -45,13 +45,13 @@ class Train:
             'test_y': self.__test_Y.shape,
         }), logs.LEVEL_DATA, True)
 
-    def train(self):
+    def train(self, use_cache=True):
         print('\nBuilding model ({}) ...'.format(self.M.TIME))
         self.model = self.M()
 
         print('\nTraining model ...')
         start_time = time.time()
-        self.model.train(self.__X, self.__names)
+        self.model.train(self.__X, self.__names, use_cache)
         train_time = time.time() - start_time
         print('\nFinish training')
 
@@ -100,8 +100,8 @@ class Train:
 
 # for i, top_k in enumerate(list(range(370, 510, 10))):
 Model.model_params['top_k'] = 410
-logs.VARIANT = f'top_{Model.model_params["top_k"]}_threshold_{Model.model_params["threshold"]}'
+logs.VARIANT = f'top_{Model.model_params["top_k"]}_threshold_{Model.model_params["threshold"]}_v5'
 
 o_train = Train()
-o_train.train()
+o_train.train(use_cache=False)
 o_train.test(False)

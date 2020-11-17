@@ -27,13 +27,21 @@ for gvkey_1, name_1, gvkey_2, name_2 in competitor_data.iloc:
     _formatted_name_1 = format_name.company_name(name_1)
     _formatted_name_2 = format_name.company_name(name_2)
 
-    # take the longer name if there are duplicated name
-    if gvkey_1 not in d_gvkey_2_name or len(_formatted_name_1.split(' ')[-1]) > 1:
-        d_gvkey_2_name[gvkey_1] = _formatted_name_1
+    # if gvkey_1 not in d_gvkey_2_name or (
+    #         len(_formatted_name_1.split(' ')) > 1 and len(_formatted_name_1) > len(d_gvkey_2_name[gvkey_1])):
+    #     d_gvkey_2_name[gvkey_1] = _formatted_name_1
+    #
+    # if gvkey_2 not in d_gvkey_2_name or (
+    #         len(_formatted_name_2.split(' ')) > 1 and len(_formatted_name_2) > len(d_gvkey_2_name[gvkey_2])):
+    #     d_gvkey_2_name[gvkey_2] = _formatted_name_2
 
-    # take the longer name if there are duplicated name
-    if gvkey_2 not in d_gvkey_2_name or len(_formatted_name_2.split(' ')[-1]) > 1:
-        d_gvkey_2_name[gvkey_2] = _formatted_name_2
+    if gvkey_1 not in d_gvkey_2_name:
+        d_gvkey_2_name[gvkey_1] = set()
+    d_gvkey_2_name[gvkey_1].add(_formatted_name_1)
+
+    if gvkey_2 not in d_gvkey_2_name:
+        d_gvkey_2_name[gvkey_2] = set()
+    d_gvkey_2_name[gvkey_2].add(_formatted_name_2)
 
     d_name_2_gvkey[_formatted_name_1] = gvkey_1
     d_name_2_gvkey[_formatted_name_2] = gvkey_2
@@ -67,12 +75,12 @@ names_domains = []
 names_no_domain = []
 
 # check how many companies have domains
-for gvkey, name in d_gvkey_2_name.items():
+for gvkey, name_set in d_gvkey_2_name.items():
     if gvkey in d_gvkey_2_domain:
-        names_domains.append([name, d_gvkey_2_domain[gvkey], gvkey])
+        names_domains.append([name_set, d_gvkey_2_domain[gvkey], gvkey])
 
     else:
-        names_no_domain.append([name, gvkey])
+        names_no_domain.append([name_set, gvkey])
 
 print(f'\ncount of gvkeys that can be mapped in the public firms file: {len(names_domains)}')
 print(f'count of gvkeys that cannot be mapped in the public firms file: {len(names_no_domain)}')
@@ -99,10 +107,10 @@ for _, linkedin_val in d_linkedin_url_2_linkedin_val.items():
         continue
 
     website = format_name.domain(main_val['website'])
-    _formatted_name = format_name.company_name(main_val['name'])
+    formatted_name = format_name.company_name(main_val['name'])
 
     d_domain_2_linkedin_val[website] = linkedin_val
-    d_name_2_linkedin_val[_formatted_name] = linkedin_val
+    d_name_2_linkedin_val[formatted_name] = linkedin_val
     d_linkedin_name_2_linkedin_val[main_val['name']] = linkedin_val
 
 print(f'len of d_domain_2_linkedin_val: {len(d_domain_2_linkedin_val)}')
@@ -115,25 +123,53 @@ count_match_domain = 0
 count_match_domain_name = 0
 domains_to_be_searched = []
 
-for name, domain, gvkey in names_domains:
+for name_set, domain, gvkey in names_domains:
     if domain in d_domain_2_linkedin_val:
         count_match_domain += 1
         count_match_domain_name += 1
         d_gvkey_2_linkedin_val[gvkey] = d_domain_2_linkedin_val[domain]
 
-    elif name in d_name_2_linkedin_val:
-        count_match_domain_name += 1
-        d_gvkey_2_linkedin_val[gvkey] = d_name_2_linkedin_val[name]
+    # elif _formatted_name in d_name_2_linkedin_val:
+    #     count_match_domain_name += 1
+    #     d_gvkey_2_linkedin_val[gvkey] = d_name_2_linkedin_val[_formatted_name]
+    #
+    #     print(f'from names_domains: {_formatted_name}: {domain}: {gvkey}: {d_name_2_linkedin_val[_formatted_name]["main"]["name"]}: {d_name_2_linkedin_val[_formatted_name]["main"]["website"]}')
+    #
+    # else:
+    #     domains_to_be_searched.append([domain, _formatted_name])
 
     else:
-        domains_to_be_searched.append([domain, name])
+        name_set = list(name_set)
+        name_set.sort(key=lambda x: -len(x))
 
-for name, gvkey in names_no_domain:
-    if name not in d_name_2_linkedin_val:
-        continue
+        has_match = False
+        for name in name_set:
+            if name in d_name_2_linkedin_val:
+                count_match_domain_name += 1
+                d_gvkey_2_linkedin_val[gvkey] = d_name_2_linkedin_val[name]
+                has_match = True
+                break
 
-    count_match_domain_name += 1
-    d_gvkey_2_linkedin_val[gvkey] = d_name_2_linkedin_val[name]
+        if not has_match:
+            for name in name_set:
+                domains_to_be_searched.append([domain, name])
+
+for name_set, gvkey in names_no_domain:
+    # if _formatted_name in d_name_2_linkedin_val:
+    #     count_match_domain_name += 1
+    #     d_gvkey_2_linkedin_val[gvkey] = d_name_2_linkedin_val[_formatted_name]
+    #
+    #     print(
+    #         f'from names_no_domain: {_formatted_name}: {gvkey} {d_name_2_linkedin_val[_formatted_name]["main"]["name"]}: {d_name_2_linkedin_val[_formatted_name]["main"]["website"]}')
+
+    name_set = list(name_set)
+    name_set.sort(key=lambda x: -len(x))
+
+    for name in name_set:
+        if name in d_name_2_linkedin_val:
+            count_match_domain_name += 1
+            d_gvkey_2_linkedin_val[gvkey] = d_name_2_linkedin_val[name]
+            break
 
 print(f'count_match_domain: {count_match_domain}')
 print(f'count_match_domain_name: {count_match_domain_name}')
@@ -142,6 +178,7 @@ competitors = []
 names_to_be_search = []
 d_min_gvkey_max_gvkey = {}
 d_gvkey = {}
+d_name = {}
 
 d_min_linkedin_name_max_linkedin_name = {}
 
@@ -152,10 +189,14 @@ for gvkey_1, name_1, gvkey_2, name_2 in competitor_data.iloc:
 
     # if no data, put it to the search queue "names_to_be_search"
     if gvkey_1 not in d_gvkey_2_linkedin_val:
-        names_to_be_search.append(name_1)
+        for _name in d_gvkey_2_name[gvkey_1]:
+            names_to_be_search.append(_name)
+        # names_to_be_search.append(d_gvkey_2_name[gvkey_1])
 
     if gvkey_2 not in d_gvkey_2_linkedin_val:
-        names_to_be_search.append(name_2)
+        for _name in d_gvkey_2_name[gvkey_2]:
+            names_to_be_search.append(_name)
+        # names_to_be_search.append(d_gvkey_2_name[gvkey_2])
 
     # if there are linkedin data for the competitor relationship
     if gvkey_1 in d_gvkey_2_linkedin_val and gvkey_2 in d_gvkey_2_linkedin_val:
@@ -164,6 +205,7 @@ for gvkey_1, name_1, gvkey_2, name_2 in competitor_data.iloc:
         if key in d_min_gvkey_max_gvkey:
             continue
         d_min_gvkey_max_gvkey[key] = True
+
         d_gvkey[gvkey_1] = True
         d_gvkey[gvkey_2] = True
 
@@ -178,15 +220,19 @@ for gvkey_1, name_1, gvkey_2, name_2 in competitor_data.iloc:
         key = f'{min(name_1, name_2)}____{max(name_1, name_2)}'
         d_min_linkedin_name_max_linkedin_name[key] = True
 
+        d_name[name_1] = True
+        d_name[name_2] = True
+
 print(f'\ncount of competitor relationships: {len(competitors)}')
-print(f'count of distinct competitor companies: {len(d_gvkey)}')
+print(f'count of distinct competitor companies (gvkeys): {len(d_gvkey)}')
+print(f'count of distinct competitor companies (names): {len(d_name)}')
 
 print('\nsaving data ...')
 
-with open(os.path.join(path.DATA_DIR, 'runtime', 'competitor_linkedin.json'), 'wb') as f:
+with open(os.path.join(path.DATA_DIR, 'runtime', f'competitor_linkedin_{path.VERSION}.json'), 'wb') as f:
     f.write(json.dumps(competitors).encode('utf-8'))
 
-with open(os.path.join(path.DATA_DIR, 'runtime', 'competitor_linkedin_dict_format_v3.json'), 'wb') as f:
+with open(os.path.join(path.DATA_DIR, 'runtime', f'competitor_linkedin_dict_format_{path.VERSION}.json'), 'wb') as f:
     f.write(json.dumps({
         'd_linkedin_name_2_linkedin_val': d_linkedin_name_2_linkedin_val,
         'd_min_linkedin_name_max_linkedin_name': d_min_linkedin_name_max_linkedin_name,

@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cdist
 from lib import path_lib
+from config.path import VERSION
 
 print('\nloading the embeddings ... ')
 
 # load embeddings
-pkl_path = path_lib.get_relative_file_path('runtime', 'input_cache', f'company_embeddings.pkl')
+pkl_path = path_lib.get_relative_file_path('runtime', 'input_cache', f'company_embeddings_{VERSION}.pkl')
 company_embeddings = path_lib.read_cache(pkl_path)
 X, names = list(zip(*company_embeddings))
 X = np.array(X)
@@ -23,7 +24,7 @@ similarities = 1 - np.tanh(distances)
 print('\nloading the competitor data ... ')
 
 # load linkedin data
-json_path = path_lib.get_relative_file_path('runtime', 'competitor_linkedin_dict_format_v3.json')
+json_path = path_lib.get_relative_file_path('runtime', f'competitor_linkedin_dict_format_{VERSION}.json')
 tmp = path_lib.load_json(json_path)
 d_linkedin_name_2_linkedin_val = tmp['d_linkedin_name_2_linkedin_val']
 d_min_linkedin_name_max_linkedin_name = tmp['d_min_linkedin_name_max_linkedin_name']
@@ -64,7 +65,7 @@ for i, name_1 in enumerate(names):
 
 data = list(map(list, d_min_name_max_name_2_sim.values()))
 df = pd.DataFrame(data, columns=['name_1', 'website_1', 'name_2', 'website_2', 'similarity', 'is_competitor'])
-df.to_csv(path_lib.get_relative_file_path('runtime', 'result_csv', 'linkedin_similarity.csv'), index=False)
+df.to_csv(path_lib.get_relative_file_path('runtime', 'result_csv', f'linkedin_similarity_{VERSION}.csv'), index=False)
 
 # statistic the competitor data
 competitor_data = list(filter(lambda x: x[-1] == 'competitor', data))
